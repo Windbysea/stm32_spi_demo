@@ -11,7 +11,6 @@
 #include "stm32f4xx_rcc.h"
 
 #include "stm32f4_discovery.h"
-#include "usart3.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -39,15 +38,13 @@ void init_SPI(void)
 
 	// enable clock for used IO pins
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
 
 	// enable SPI2 peripheral clock
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 
 	/* configure pins used by SPI1
-	* PE7 = NSS(CS)
 	* PA5 = SCK
-	* PA5 = MISO
+	* PA6 = MISO
 	* PA7 = MOSI
 	*/
 	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5| GPIO_Pin_6 | GPIO_Pin_7;
@@ -63,16 +60,6 @@ void init_SPI(void)
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_SPI1);
 
 
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_7 |GPIO_Pin_3;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOE, &GPIO_InitStruct);	
-	
-
-	GPIO_SetBits(GPIOE,GPIO_Pin_3);	//Let the LIS302DL disable
-	GPIO_SetBits(GPIOE,GPIO_Pin_7); //Pull High
-
 	/* configure SPI1 in Mode 0
 	* CPOL = 0 --> clock is low when idle
 	* CPHA = 0 --> data is sampled at the first edge
@@ -84,7 +71,7 @@ void init_SPI(void)
 	SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low; // clock is low when idle
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge; // data sampled at first edge
 	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft|SPI_NSSInternalSoft_Set ; // set the NSS management to internal and pull internal NSS high
-	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2; // SPI frequency is APB2 frequency / 4
+	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4; // SPI frequency is APB2 frequency / 4
 	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;// data is transmitted MSB first
 	SPI_Init(SPI1, &SPI_InitStruct);
 	SPI_Cmd(SPI1, ENABLE); // enable SPI1	
@@ -93,18 +80,16 @@ void init_SPI(void)
 
 	// enable clock for used IO pins
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
 
 	// enable SPI2 peripheral clock
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 
 	/* configure pins used by SPI2
-	* PA15 = NSS(CS)
 	* PA5 = SCK
-	* PA5 = MISO
+	* PA6 = MISO
 	* PA7 = MOSI
 	*/
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5| GPIO_Pin_6 | GPIO_Pin_7 |  GPIO_Pin_15;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5| GPIO_Pin_6 | GPIO_Pin_7;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
@@ -115,16 +100,7 @@ void init_SPI(void)
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource5, GPIO_AF_SPI1);
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_SPI1);
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_SPI1);
-	GPIO_PinAFConfig(GPIOA, GPIO_PinSource15, GPIO_AF_SPI1);
 
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOE, &GPIO_InitStruct);	
-	
-
-	GPIO_SetBits(GPIOE,GPIO_Pin_3);		//Let the LIS302DL disable
 
 	/* configure SPI1 in Mode 0
 	* CPOL = 0 --> clock is low when idle
@@ -137,10 +113,9 @@ void init_SPI(void)
 	SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low; // clock is low when idle
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge; // data sampled at first edge
 	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft ; // set the NSS management to internal and pull internal NSS high
-	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2; // SPI frequency is APB2 frequency / 4
+	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4; // SPI frequency is APB2 frequency / 4
 	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;// data is transmitted MSB first
 	SPI_Init(SPI1, &SPI_InitStruct);
-	//SPI_Cmd(SPI1, ENABLE); // enable SPI1	
 
 	SPI_Cmd(SPI1, ENABLE);
 
@@ -200,7 +175,6 @@ void init_PB()
 // FOR MASTER Uesed 
 uint8_t RemoteLED_OnOff(uint8_t action)
 {
-	uint32_t TimeOutLed=10000;
 
 	while(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_TXE) == RESET);
 
@@ -259,7 +233,6 @@ void pb_task(void *pvParameters)
 void spi_recv_msg_task(void *pvParameters)
 {
 	uint8_t rcv_tmp = 0;
-	uint32_t TimeOutLed = 10000;
 
 	while(1)
 	{

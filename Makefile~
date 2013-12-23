@@ -56,6 +56,11 @@ slave:  main.c  $(SRC)
 		-lSTM32F4xx_StdPeriph_Driver -L$(LIB_STM)/STM32F_USB_OTG_Driver/build -L$(C_LIB) -lc -lm
 	$(OBJCOPY) -O binary $(EXECUTABLE) STM32F4-SPI-SLAVE.bin
 
+slave_it:  main.c  $(SRC) 
+	$(CC) $(CFLAGS) -DSPI_IT=1 $^ -o $(EXECUTABLE)  -L$(LIB_STM)/STM32F4xx_StdPeriph_Driver/build \
+		-lSTM32F4xx_StdPeriph_Driver -L$(LIB_STM)/STM32F_USB_OTG_Driver/build -L$(C_LIB) -lc -lm
+	$(OBJCOPY) -O binary $(EXECUTABLE) STM32F4-SPI-SLAVE-IT.bin
+
 master: main.c  $(SRC) 
 	$(CC) $(CFLAGS) -DMASTER=1 $^ -o $(EXECUTABLE)  -L$(LIB_STM)/STM32F4xx_StdPeriph_Driver/build \
 		-lSTM32F4xx_StdPeriph_Driver -L$(LIB_STM)/STM32F_USB_OTG_Driver/build -L$(C_LIB) -lc -lm
